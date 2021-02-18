@@ -1,3 +1,5 @@
+// ! TODO: decompose to functions, look for ability to make optimisation
+
 #include <iostream>
 #include <vector>
 #include <string>
@@ -23,7 +25,7 @@ int main()
     int commands_number,
         winner_points = 0;
     std::ifstream current_file;
-    std::ofstream result_file("result.csv");
+    std::ofstream result_file("result.txt");
 
     for (size_t i = 0; i < files_list.size(); i++)
     {
