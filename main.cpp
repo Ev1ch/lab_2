@@ -61,7 +61,7 @@ int main()
                 // Recalculationg command points
                 if (command_goals > opponent_goals)
                 {
-                    command_points += 2;
+                    command_points += 3;
                 }
                 else if (command_goals == opponent_goals)
                 {
