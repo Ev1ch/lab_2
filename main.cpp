@@ -5,18 +5,19 @@
 #include <string>
 #include <filesystem>
 #include <fstream>
-#include<windows.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 namespace fs = std::filesystem;
 
 void get_files_names(std::vector<std::string> &, std::string);
-void checking_all_matches(int, int, int &, std::string);
+void check_all_matches(int, int, int &, std::string);
 std::string get_command_name(std::string);
 void find_winner(std::string, int &, std::string &, int &);
 void get_personal_results(std::string, int, std::ofstream &);
 void looking_for_winner(int, std::ifstream &, std::string, std::string &, std::ofstream &, int &);
 void write_winner(std::string, std::ofstream &);
-bool dir_exists(const std::string& ) ;
+bool dir_exists(const std::string &);
 
 int main()
 {
@@ -25,15 +26,17 @@ int main()
     std::string files_path = "results";
     std::cout << "Enter directory path: " << std::endl;
     std::cin >> files_path;
-    
+
     std::ifstream current_file;
     std::ofstream result_file("result.txt");
 
-    //check if the directory exists
-    if( !dir_exists(files_path) ){
-        return result_file << "There is no such a directory...", 0 ;
+    // Check if the directory exists
+    if (!dir_exists(files_path))
+    {
+        std::cout << "There is no such a directory..." << std::endl;
+        return 0;
     }
-    
+
     // Getting names of all .csv files in specified directory
     get_files_names(files_list, files_path);
 
@@ -42,15 +45,14 @@ int main()
         winner_name;
     int commands_number,
         winner_points = 0;
-    
+
     for (size_t i = 0; i < files_list.size(); i++)
     {
         current_file.open(files_list[i]);
-        
-        if(!current_file.is_open()){
-            result_file << "Something went wrong :(" ;
-        }
-        
+
+        if (!current_file.is_open())
+            std::cout << "Something went wrong with " << files_list[i] << "..." << std::endl;
+
         std::getline(current_file, current_line);
 
         // Getting commands number in this file
@@ -67,15 +69,12 @@ int main()
 
     return 0;
 }
-bool dir_exists(const std::string& files_path){
-    DWORD ftyp = GetFileAttributesA(files_path.c_str());
-    if (ftyp == INVALID_FILE_ATTRIBUTES)
-        return false;
-    else if (ftyp & FILE_ATTRIBUTE_DIRECTORY)
-        return true;
-    else
-        return false;
+
+bool dir_exists(const std::string &files_path)
+{
+    return std::filesystem::is_directory(files_path);
 }
+
 void looking_for_winner(int commands_left,
                         std::ifstream &current_file,
                         std::string current_line,
@@ -116,7 +115,7 @@ void get_files_names(std::vector<std::string> &files_list, std::string files_pat
     }
 }
 
-void checking_all_matches(int j, int len, int &command_points, std::string current_line)
+void check_all_matches(int j, int len, int &command_points, std::string current_line)
 {
     if (j >= len)
         return;
@@ -134,19 +133,17 @@ void checking_all_matches(int j, int len, int &command_points, std::string curre
     command_points += ((command_goals > opponent_goals) ? 3 : (command_goals == opponent_goals) ? 1
                                                                                                 : 0);
 
-    return checking_all_matches(match_end, len, command_points, current_line);
+    return check_all_matches(match_end, len, command_points, current_line);
 }
 
 void find_winner(std::string current_line, int &winner_points, std::string &winner_name, int &command_points)
 {
 
-    checking_all_matches(current_line.find(','), current_line.length(), command_points, current_line);
+    check_all_matches(current_line.find(','), current_line.length(), command_points, current_line);
 
     // Updating winner
     if (command_points >= winner_points)
-    {
         winner_points = command_points, winner_name = get_command_name(current_line);
-    }
 }
 
 void get_personal_results(std::string command_name, int command_points, std::ofstream &result_file)
