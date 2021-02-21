@@ -12,8 +12,8 @@ void getNames( std::vector<std::string>& , std::string ) ;
 void CheckingAllMatches(int, int, int&, std::string );
 std::string getName( std::string);
 void FindWinner(std::string, int&, std::string&, int& );
-
-
+void getPersonalResults(std::string, int, std::ofstream&);
+void WriteWinner(std::string, std::ofstream&);
 
 int main()
 {
@@ -50,24 +50,18 @@ int main()
             std::string command_name = getName(current_line) ;
             FindWinner(current_line, winner_points, winner_name, command_points) ;
 
-            // Writing command points in file
-            result_file << std::setw(30) << command_name + ":"
-                        << "\t" << std::to_string(command_points) << std::endl;
+            getPersonalResults(command_name, command_points, result_file) ;
         }
         current_file.close();
     }
 
-    // Writing winner
-    result_file << "----------------------------------------------------------------" << std::endl;
-    result_file << std::setw(30) << "Winner: " << '\t' << winner_name << '\n' ;
-    result_file.close();
+    WriteWinner(winner_name, result_file) ;
 
     return 0;
 }
 std::string getName( std::string current_line){
     return current_line.substr(0, current_line.find(',')) ;
 }
-
 void getNames( std::vector<std::string>& files_list, std::string files_path){
     for (const auto &entry : std::filesystem::directory_iterator(files_path)){
         if (entry.path().extension() == ".csv"){
@@ -77,7 +71,6 @@ void getNames( std::vector<std::string>& files_list, std::string files_path){
         }
     }
 }
-
 void CheckingAllMatches(int j, int len, int& command_points, std::string current_line ){
     if( j >= len )return ;
 
@@ -95,7 +88,6 @@ void CheckingAllMatches(int j, int len, int& command_points, std::string current
 
     return CheckingAllMatches(match_end, len, command_points, current_line) ;
 }
-
 void FindWinner(std::string current_line, int& winner_points, std::string& winner_name, int& command_points ){
 
     CheckingAllMatches(current_line.find(','), current_line.length(), command_points, current_line) ;
@@ -104,4 +96,12 @@ void FindWinner(std::string current_line, int& winner_points, std::string& winne
     if (command_points >= winner_points){
         winner_points = command_points, winner_name = getName(current_line);
     }
+}
+void getPersonalResults(std::string command_name, int command_points, std::ofstream& result_file){
+     result_file << std::setw(30) << command_name + ":\t" << std::to_string(command_points) << std::endl;
+}
+void WriteWinner(std::string winner_name, std::ofstream& result_file){
+    result_file << "----------------------------------------------------------------\n";
+    result_file << std::setw(30) << "Winner: \t" << winner_name << '\n' ;
+    result_file.close();
 }
