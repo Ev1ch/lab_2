@@ -5,6 +5,7 @@
 #include <string>
 #include <filesystem>
 #include <fstream>
+#include<windows.h>
 
 namespace fs = std::filesystem;
 
@@ -15,6 +16,7 @@ void find_winner(std::string, int &, std::string &, int &);
 void get_personal_results(std::string, int, std::ofstream &);
 void looking_for_winner(int, std::ifstream &, std::string, std::string &, std::ofstream &, int &);
 void write_winner(std::string, std::ofstream &);
+bool dir_exists(const std::string& ) ;
 
 int main()
 {
@@ -23,7 +25,15 @@ int main()
     std::string files_path = "results";
     std::cout << "Enter directory path: " << std::endl;
     std::cin >> files_path;
+    
+    std::ifstream current_file;
+    std::ofstream result_file("result.txt");
 
+    //check if the directory exists
+    if( !dir_exists(files_path) ){
+        return result_file << "There is no such a directory...", 0 ;
+    }
+    
     // Getting names of all .csv files in specified directory
     get_files_names(files_list, files_path);
 
@@ -32,12 +42,15 @@ int main()
         winner_name;
     int commands_number,
         winner_points = 0;
-    std::ifstream current_file;
-    std::ofstream result_file("result.txt");
-
+    
     for (size_t i = 0; i < files_list.size(); i++)
     {
         current_file.open(files_list[i]);
+        
+        if(!current_file.is_open()){
+            result_file << "Something went wrong :(" ;
+        }
+        
         std::getline(current_file, current_line);
 
         // Getting commands number in this file
@@ -54,7 +67,15 @@ int main()
 
     return 0;
 }
-
+bool dir_exists(const std::string& files_path){
+    DWORD ftyp = GetFileAttributesA(files_path.c_str());
+    if (ftyp == INVALID_FILE_ATTRIBUTES)
+        return false;
+    else if (ftyp & FILE_ATTRIBUTE_DIRECTORY)
+        return true;
+    else
+        return false;
+}
 void looking_for_winner(int commands_left,
                         std::ifstream &current_file,
                         std::string current_line,
