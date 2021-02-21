@@ -6,6 +6,8 @@
 #include <filesystem>
 #include <fstream>
 
+namespace fs = std::filesystem;
+
 int main()
 {
     // Getting directory path
@@ -16,8 +18,11 @@ int main()
 
     // Getting names of all .csv files in specified directory
     for (const auto &entry : std::filesystem::directory_iterator(files_path))
-        if (entry.path().extension() == ".csv")
-            files_list.push_back(entry.path());
+        if (entry.path().extension() == ".csv"){
+            fs::path path{entry};
+            std::string path_string{path.string()};
+            files_list.push_back(path_string) ;
+        }
 
     // Checking all files
     std::string current_line,
