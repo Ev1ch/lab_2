@@ -10,6 +10,10 @@ namespace fs = std::filesystem;
 
 void getNames( std::vector<std::string>& , std::string ) ;
 void CheckingAllMatches(int, int, int&, std::string );
+std::string getName( std::string);
+void FindWinner(std::string, int&, std::string&, int& );
+
+
 
 int main()
 {
@@ -42,17 +46,9 @@ int main()
         for (size_t i = 0; i < commands_number; i++)
         {
             std::getline(current_file, current_line);
-            size_t j = current_line.find(',');
-            int command_points = 0;
-            std::string command_name = current_line.substr(0, j),
-                        result_line;
-
-            CheckingAllMatches(j, current_line.length(), command_points, current_line) ;
-
-            // Updating winner
-            if (command_points >= winner_points){
-                winner_points = command_points, winner_name = command_name;
-            }
+            int command_points = 0 ;
+            std::string command_name = getName(current_line) ;
+            FindWinner(current_line, winner_points, winner_name, command_points) ;
 
             // Writing command points in file
             result_file << std::setw(30) << command_name + ":"
@@ -68,6 +64,10 @@ int main()
 
     return 0;
 }
+std::string getName( std::string current_line){
+    return current_line.substr(0, current_line.find(',')) ;
+}
+
 void getNames( std::vector<std::string>& files_list, std::string files_path){
     for (const auto &entry : std::filesystem::directory_iterator(files_path)){
         if (entry.path().extension() == ".csv"){
@@ -94,4 +94,14 @@ void CheckingAllMatches(int j, int len, int& command_points, std::string current
     command_points += ((command_goals > opponent_goals) ? 3 : (command_goals == opponent_goals) ? 1 : 0 )  ;
 
     return CheckingAllMatches(match_end, len, command_points, current_line) ;
+}
+
+void FindWinner(std::string current_line, int& winner_points, std::string& winner_name, int& command_points ){
+
+    CheckingAllMatches(current_line.find(','), current_line.length(), command_points, current_line) ;
+
+    // Updating winner
+    if (command_points >= winner_points){
+        winner_points = command_points, winner_name = getName(current_line);
+    }
 }
