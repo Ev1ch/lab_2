@@ -8,6 +8,8 @@
 
 namespace fs = std::filesystem;
 
+void getNames( std::vector<std::string>& , std::string ) ;
+
 int main()
 {
     // Getting directory path
@@ -17,12 +19,7 @@ int main()
     std::cin >> files_path;
 
     // Getting names of all .csv files in specified directory
-    for (const auto &entry : std::filesystem::directory_iterator(files_path))
-        if (entry.path().extension() == ".csv"){
-            fs::path path{entry};
-            std::string path_string{path.string()};
-            files_list.push_back(path_string) ;
-        }
+    getNames(files_list, files_path) ;
 
     // Checking all files
     std::string current_line,
@@ -98,4 +95,13 @@ int main()
     result_file.close();
 
     return 0;
+}
+void getNames( std::vector<std::string>& files_list, std::string files_path){
+    for (const auto &entry : std::filesystem::directory_iterator(files_path)){
+        if (entry.path().extension() == ".csv"){
+            fs::path path{entry};
+            std::string path_string{path.string()};
+            files_list.push_back(path_string) ;
+        }
+    }
 }
