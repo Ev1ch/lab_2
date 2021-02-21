@@ -9,6 +9,7 @@
 namespace fs = std::filesystem;
 
 void getNames( std::vector<std::string>& , std::string ) ;
+void CheckingAllMatches(int, int, int&, std::string );
 
 int main()
 {
@@ -46,39 +47,11 @@ int main()
             std::string command_name = current_line.substr(0, j),
                         result_line;
 
-            // Checking all command's matches
-            while (j < current_line.length())
-            {
-                // Getting current match start and end indexes
-                int match_start = ++j,
-                    match_end = current_line.find(',', j);
-                if (match_end == std::string::npos)
-                    match_end = current_line.length();
-                std::string current_match = current_line.substr(match_start, match_end - match_start);
-
-                // Getting current match goals table
-                int command_goals = std::stoi(current_match.substr(0, current_match.find(':'))),
-                    opponent_goals = std::stoi(current_match.substr(current_match.find(':') + 1));
-
-                // Recalculationg command points
-                if (command_goals > opponent_goals)
-                {
-                    command_points += 3;
-                }
-                else if (command_goals == opponent_goals)
-                {
-                    command_points++;
-                }
-
-                // Updating increment
-                j = match_end;
-            }
+            CheckingAllMatches(j, current_line.length(), command_points, current_line) ;
 
             // Updating winner
-            if (command_points >= winner_points)
-            {
-                winner_points = command_points;
-                winner_name = command_name;
+            if (command_points >= winner_points){
+                winner_points = command_points, winner_name = command_name;
             }
 
             // Writing command points in file
@@ -90,8 +63,7 @@ int main()
 
     // Writing winner
     result_file << "----------------------------------------------------------------" << std::endl;
-    result_file << std::setw(30) << "Winner:"
-                << "\t" << winner_name << std::endl;
+    result_file << std::setw(30) << "Winner: " << '\t' << winner_name << '\n' ;
     result_file.close();
 
     return 0;
@@ -104,4 +76,22 @@ void getNames( std::vector<std::string>& files_list, std::string files_path){
             files_list.push_back(path_string) ;
         }
     }
+}
+
+void CheckingAllMatches(int j, int len, int& command_points, std::string current_line ){
+    if( j >= len )return ;
+
+    int match_start = ++j,
+        match_end = current_line.find(',', j);
+    if (match_end == std::string::npos)
+        match_end = current_line.length();
+    std::string current_match = current_line.substr(match_start, match_end - match_start);
+
+    // Getting current match goals table
+    int command_goals = std::stoi(current_match.substr(0, current_match.find(':'))),
+        opponent_goals = std::stoi(current_match.substr(current_match.find(':') + 1));
+
+    command_points += ((command_goals > opponent_goals) ? 3 : (command_goals == opponent_goals) ? 1 : 0 )  ;
+
+    return CheckingAllMatches(match_end, len, command_points, current_line) ;
 }
