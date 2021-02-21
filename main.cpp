@@ -14,6 +14,7 @@ std::string getName( std::string);
 void FindWinner(std::string, int&, std::string&, int& );
 void getPersonalResults(std::string, int, std::ofstream&);
 void WriteWinner(std::string, std::ofstream&);
+void LookingForWinner(int, std::ifstream&, std::string, std::string&, std::ofstream&, int&) ;
 
 int main()
 {
@@ -43,21 +44,34 @@ int main()
         commands_number = std::stoi(current_line);
 
         // Checking all commands and find winner
-        for (size_t i = 0; i < commands_number; i++)
-        {
-            std::getline(current_file, current_line);
-            int command_points = 0 ;
-            std::string command_name = getName(current_line) ;
-            FindWinner(current_line, winner_points, winner_name, command_points) ;
-
-            getPersonalResults(command_name, command_points, result_file) ;
-        }
+        LookingForWinner(commands_number, current_file,
+                         current_line, winner_name,
+                         result_file, winner_points) ;
         current_file.close();
     }
 
     WriteWinner(winner_name, result_file) ;
 
     return 0;
+}
+void LookingForWinner(int commandsLeft,
+                      std::ifstream& current_file,
+                      std::string current_line,
+                      std::string& winner_name,
+                      std::ofstream& result_file,
+                      int& winner_points){
+        if(commandsLeft <= 0)return ;
+
+        std::getline(current_file, current_line);
+        int command_points = 0 ;
+        std::string command_name = getName(current_line) ;
+        FindWinner(current_line, winner_points, winner_name, command_points) ;
+
+        getPersonalResults(command_name, command_points, result_file) ;
+
+        return LookingForWinner(commandsLeft - 1, current_file,
+                                current_line, winner_name,
+                                result_file, winner_points) ;
 }
 std::string getName( std::string current_line){
     return current_line.substr(0, current_line.find(',')) ;
