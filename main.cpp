@@ -16,7 +16,6 @@ void get_personal_results(std::string, int, std::ofstream &);
 void looking_for_winner(int, std::ifstream &, std::string, std::string &, std::ofstream &, int &, int& );
 void write_winner(std::string, std::ofstream &);
 bool dir_exists(const std::string &);
-//void search_answer(int, std::vector<std::string>, int&, std::ifstream&, std::string&, std::string& , std::ofstream&, int );
 
 int main()
 {
@@ -42,9 +41,12 @@ int main()
     // Checking all files
     std::string current_line,
         winner_name;
-    int winner_points = 0,
+    int commands_number,
+        winner_points = 0,
         winner_goals = 0 ;
-    for(int i = 0 ; i < files_list.size() ; i ++ ){
+
+    for (size_t i = 0; i < files_list.size(); i++)
+    {
         current_file.open(files_list[i]);
 
         if (!current_file.is_open())
@@ -67,6 +69,10 @@ int main()
     return 0;
 }
 
+bool dir_exists(const std::string &files_path)
+{
+    return std::filesystem::is_directory(files_path);
+}
 
 void looking_for_winner(int commands_left,
                         std::ifstream &current_file,
@@ -108,11 +114,6 @@ void get_files_names(std::vector<std::string> &files_list, std::string files_pat
             files_list.push_back(path_string);
         }
     }
-}
-
-bool dir_exists(const std::string &files_path)
-{
-    return std::filesystem::is_directory(files_path);
 }
 
 void check_all_matches(int j, int len, int &command_points, std::string current_line, int& winner_goals, int& diff_goals)
@@ -167,4 +168,3 @@ void write_winner(std::string winner_name, std::ofstream &result_file)
     result_file << std::setw(30) << "Winner: \t" << winner_name << '\n';
     result_file.close();
 }
-
