@@ -9,14 +9,14 @@
 namespace fs = std::filesystem;
 
 void get_files_names(std::vector<std::string> &, std::string);
-void check_all_matches(int, int, int &, std::string);
+void check_all_matches(int, int, int &, std::string, int&, int& );
 std::string get_command_name(std::string);
-void find_winner(std::string, int &, std::string &, int &);
+void find_winner(std::string, int &, std::string &, int &, int& );
 void get_personal_results(std::string, int, std::ofstream &);
-void looking_for_winner(int, std::ifstream &, std::string, std::string &, std::ofstream &, int &);
+void looking_for_winner(int, std::ifstream &, std::string, std::string &, std::ofstream &, int &, int& );
 void write_winner(std::string, std::ofstream &);
 bool dir_exists(const std::string &);
-void search_answer(int, std::vector<std::string>, int&, std::ifstream&, std::string&, std::string& , std::ofstream& );
+//void search_answer(int, std::vector<std::string>, int&, std::ifstream&, std::string&, std::string& , std::ofstream&, int );
 
 int main()
 {
@@ -42,12 +42,26 @@ int main()
     // Checking all files
     std::string current_line,
         winner_name;
-    int winner_points = 0;
+    int winner_points = 0,
+        winner_goals = 0 ;
+    for(int i = 0 ; i < files_list.size() ; i ++ ){
+        current_file.open(files_list[i]);
 
-    search_answer(0, files_list, winner_points,
-                  current_file, current_line,
-                  winner_name, result_file) ;
+        if (!current_file.is_open())
+            std::cout << "Something went wrong with " << files_list[i] << "..." << std::endl;
 
+        std::getline(current_file, current_line);
+
+        // Getting commands number in this file
+        int commands_number = std::stoi(current_line);
+
+        // Checking all commands and find winner
+        looking_for_winner(commands_number, current_file,
+                           current_line, winner_name,
+                           result_file, winner_points,
+                           winner_goals);
+        current_file.close();
+    }
     write_winner(winner_name, result_file);
 
     return 0;
@@ -59,7 +73,8 @@ void looking_for_winner(int commands_left,
                         std::string current_line,
                         std::string &winner_name,
                         std::ofstream &result_file,
-                        int &winner_points)
+                        int &winner_points,
+                        int& winner_goals)
 {
     if (commands_left <= 0)
         return;
@@ -67,13 +82,14 @@ void looking_for_winner(int commands_left,
     std::getline(current_file, current_line);
     int command_points = 0;
     std::string command_name = get_command_name(current_line);
-    find_winner(current_line, winner_points, winner_name, command_points);
+    find_winner(current_line, winner_points, winner_name, command_points, winner_goals);
 
     get_personal_results(command_name, command_points, result_file);
 
     return looking_for_winner(commands_left - 1, current_file,
                               current_line, winner_name,
-                              result_file, winner_points);
+                              result_file, winner_points,
+                              winner_goals);
 }
 
 std::string get_command_name(std::string current_line)
@@ -93,46 +109,13 @@ void get_files_names(std::vector<std::string> &files_list, std::string files_pat
         }
     }
 }
-void search_answer(int is,
-                   std::vector<std::string> files_list,
-                   int& winner_points,
-                   std::ifstream& current_file,
-                   std::string& current_line,
-                   std::string& winner_name,
-                   std::ofstream& result_file)
-{
-        if(is >= files_list.size()) return;
-
-        current_file.open(files_list[is]);
-
-        if (!current_file.is_open())
-            std::cout << "Something went wrong with " << files_list[is] << "..." << std::endl;
-
-        std::getline(current_file, current_line);
-
-        // Getting commands number in this file
-        int commands_number = std::stoi(current_line);
-
-        // Checking all commands and find winner
-        looking_for_winner(commands_number, current_file,
-                           current_line, winner_name,
-                           result_file, winner_points);
-        current_file.close();
-        return search_answer(is + 1,files_list,
-                             winner_points,
-                             current_file,
-                             current_line,
-                             winner_name,
-                             result_file) ;
-}
-
 
 bool dir_exists(const std::string &files_path)
 {
     return std::filesystem::is_directory(files_path);
 }
 
-void check_all_matches(int j, int len, int &command_points, std::string current_line)
+void check_all_matches(int j, int len, int &command_points, std::string current_line, int& winner_goals, int& diff_goals)
 {
     if (j >= len)
         return;
@@ -147,20 +130,30 @@ void check_all_matches(int j, int len, int &command_points, std::string current_
     int command_goals = std::stoi(current_match.substr(0, current_match.find(':'))),
         opponent_goals = std::stoi(current_match.substr(current_match.find(':') + 1));
 
-    command_points += ((command_goals > opponent_goals) ? 3 : (command_goals == opponent_goals) ? 1
-                                                                                                : 0);
-
-    return check_all_matches(match_end, len, command_points, current_line);
+    //command_points += ((command_goals > opponent_goals) ? 3 : (command_goals == opponent_goals) ? 1: 0);
+    if( command_goals > opponent_goals ){
+        command_points += 3 ;
+    } else if( command_goals == opponent_goals){
+        command_points += 1 ;
+    }
+    diff_goals += (command_goals - opponent_goals) ;
+    return check_all_matches(match_end, len, command_points, current_line, winner_goals, diff_goals);
 }
 
-void find_winner(std::string current_line, int &winner_points, std::string &winner_name, int &command_points)
+void find_winner(std::string current_line, int &winner_points, std::string &winner_name, int &command_points, int& winner_goals)
 {
-
-    check_all_matches(current_line.find(','), current_line.length(), command_points, current_line);
+    int diff_goals = 0 ;
+    check_all_matches(current_line.find(','), current_line.length(), command_points, current_line, winner_goals, diff_goals);
 
     // Updating winner
-    if (command_points >= winner_points)
-        winner_points = command_points, winner_name = get_command_name(current_line);
+    if ( command_points > winner_points )
+        winner_points = command_points, winner_name = get_command_name(current_line), winner_goals = diff_goals;
+    else if( command_points == winner_points ){
+        if( diff_goals > winner_goals ){
+            winner_points = command_points, winner_name = get_command_name(current_line), winner_goals = diff_goals;
+        }
+    }
+
 }
 
 void get_personal_results(std::string command_name, int command_points, std::ofstream &result_file)
