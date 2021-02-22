@@ -16,7 +16,6 @@ void get_personal_results(std::string, int, std::ofstream &);
 void looking_for_winner(int, std::ifstream &, std::string, std::string &, std::ofstream &, int &);
 void write_winner(std::string, std::ofstream &);
 bool dir_exists(const std::string &);
-void search_answer(int, std::vector<std::string>, int&, std::ifstream&, std::string&, std::string& , std::ofstream& );
 
 int main()
 {
@@ -42,17 +41,37 @@ int main()
     // Checking all files
     std::string current_line,
         winner_name;
-    int winner_points = 0;
+    int commands_number,
+        winner_points = 0;
 
-    search_answer(0, files_list, winner_points,
-                  current_file, current_line,
-                  winner_name, result_file) ;
+    for (size_t i = 0; i < files_list.size(); i++)
+    {
+        current_file.open(files_list[i]);
+
+        if (!current_file.is_open())
+            std::cout << "Something went wrong with " << files_list[i] << "..." << std::endl;
+
+        std::getline(current_file, current_line);
+
+        // Getting commands number in this file
+        commands_number = std::stoi(current_line);
+
+        // Checking all commands and find winner
+        looking_for_winner(commands_number, current_file,
+                           current_line, winner_name,
+                           result_file, winner_points);
+        current_file.close();
+    }
 
     write_winner(winner_name, result_file);
 
     return 0;
 }
 
+bool dir_exists(const std::string &files_path)
+{
+    return std::filesystem::is_directory(files_path);
+}
 
 void looking_for_winner(int commands_left,
                         std::ifstream &current_file,
@@ -92,44 +111,6 @@ void get_files_names(std::vector<std::string> &files_list, std::string files_pat
             files_list.push_back(path_string);
         }
     }
-}
-void search_answer(int is,
-                   std::vector<std::string> files_list,
-                   int& winner_points,
-                   std::ifstream& current_file,
-                   std::string& current_line,
-                   std::string& winner_name,
-                   std::ofstream& result_file)
-{
-        if(is >= files_list.size()) return;
-
-        current_file.open(files_list[is]);
-
-        if (!current_file.is_open())
-            std::cout << "Something went wrong with " << files_list[is] << "..." << std::endl;
-
-        std::getline(current_file, current_line);
-
-        // Getting commands number in this file
-        int commands_number = std::stoi(current_line);
-
-        // Checking all commands and find winner
-        looking_for_winner(commands_number, current_file,
-                           current_line, winner_name,
-                           result_file, winner_points);
-        current_file.close();
-        return search_answer(is + 1,files_list,
-                             winner_points,
-                             current_file,
-                             current_line,
-                             winner_name,
-                             result_file) ;
-}
-
-
-bool dir_exists(const std::string &files_path)
-{
-    return std::filesystem::is_directory(files_path);
 }
 
 void check_all_matches(int j, int len, int &command_points, std::string current_line)
@@ -174,4 +155,3 @@ void write_winner(std::string winner_name, std::ofstream &result_file)
     result_file << std::setw(30) << "Winner: \t" << winner_name << '\n';
     result_file.close();
 }
-
